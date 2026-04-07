@@ -43,7 +43,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.get("/health", tags=["system"])
+    @app.get(settings.api_v1_prefix + "/health", tags=["system"])
     def healthcheck(db=Depends(get_db)) -> Dict[str, Any]:
         from app.models.admin import AdminUser
         admin_exists = db.query(AdminUser).first() is not None

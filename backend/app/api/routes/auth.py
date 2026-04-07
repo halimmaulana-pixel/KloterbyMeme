@@ -12,10 +12,17 @@ router = APIRouter()
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db=Depends(get_db)):
+    print(f"Login attempt for email: {payload.email}")
     admin = AdminRepository(db).get_by_email(payload.email)
-    if not admin or not verify_password(payload.password, admin.password_hash):
+    if not admin:
+        print(f"Admin not found: {payload.email}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    if not verify_password(payload.password, admin.password_hash):
+        print(f"Invalid password for: {payload.email}")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    print(f"Login successful for: {payload.email}")
     token = create_access_token(
         subject=admin.email,
         role="admin",
