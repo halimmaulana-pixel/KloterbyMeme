@@ -19,8 +19,12 @@ export default function AdminLoginPage() {
       setSession({ token: response.data.access_token, role: response.data.role });
       router.push("/admin/dashboard");
     } catch (err) {
-      const detail = err.response?.data?.detail;
-      setError(typeof detail === "string" ? detail : "Login gagal. Cek email dan password.");
+      if (!err.response) {
+        setError("Gagal terhubung ke server. Pastikan API URL sudah benar.");
+      } else {
+        const detail = err.response?.data?.detail;
+        setError(typeof detail === "string" ? detail : "Login gagal. Cek email dan password.");
+      }
     } finally {
       setLoading(false);
     }
