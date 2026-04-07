@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -55,10 +56,6 @@ def create_app() -> FastAPI:
     app.include_router(api_router, prefix=settings.api_v1_prefix)
     app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
     return app
-
-
-app = create_app()
-urn app
 
 
 app = create_app()
