@@ -25,13 +25,30 @@ def create_app() -> FastAPI:
     def on_startup():
         # Create tables
         Base.metadata.create_all(bind=engine)
-        # Check if we need to seed
+        # Only ensure admin exists, don't run full seed simulation
         db = SessionLocal()
         try:
             admin = db.query(AdminUser).first()
             if not admin:
-                print("No admin found. Seeding data...")
-                seed()
+                print("No admin found. Creating default admin...")
+                import uuid
+                from app.models.tenant import Tenant
+                from app.core.security import hash_password
+                
+                tenant = Tenant(id=uuid.uuid4(), name="Kloterby Meme", plan="premium")
+                db.add(tenant)
+                db.flush()
+                
+                default_admin = AdminUser(
+                    tenant_id=tenant.id,
+                    name="Admin Meme",
+                    email="admin@meme.com",
+                    password_hash=hash_password("admin123"),
+                    role="owner"
+                )
+                db.add(default_admin)
+                db.commit()
+                print("Default admin created: admin@meme.com / admin123")
         finally:
             db.close()
 
