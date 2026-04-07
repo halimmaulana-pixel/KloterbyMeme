@@ -1,9 +1,21 @@
-from fastapi import APIRouter
-
+from typing import Any, Dict
+from fastapi import APIRouter, Depends
+from app.api.deps import get_db
 from app.api.routes import auth, dashboard, disbursements, kloter, members, payments, periods
-
+from app.config import settings
 
 api_router = APIRouter()
+
+@api_router.get("/health", tags=["system"])
+def healthcheck(db=Depends(get_db)) -> Dict[str, Any]:
+    from app.models.admin import AdminUser
+    admin_exists = db.query(AdminUser).first() is not None
+    return {
+        "status": "ok", 
+        "app": settings.app_name, 
+        "database_initialized": admin_exists
+    }
+
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(kloter.router, prefix="/kloter", tags=["kloter"])
