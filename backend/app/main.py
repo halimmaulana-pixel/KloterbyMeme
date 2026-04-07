@@ -43,8 +43,14 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/health", tags=["system"])
-    def healthcheck() -> dict[str, str]:
-        return {"status": "ok", "app": settings.app_name}
+    def healthcheck(db=Depends(get_db)) -> dict[str, any]:
+        from app.models.admin import AdminUser
+        admin_exists = db.query(AdminUser).first() is not None
+        return {
+            "status": "ok", 
+            "app": settings.app_name, 
+            "database_initialized": admin_exists
+        }
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
     app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
