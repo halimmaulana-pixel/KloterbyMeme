@@ -15,7 +15,10 @@ def login(payload: LoginRequest, db=Depends(get_db)):
     print(f"Login attempt for email: {payload.email}")
     admin = AdminRepository(db).get_by_email(payload.email)
     if not admin:
-        print(f"Admin not found: {payload.email}")
+        all_admins = db.query(AdminUser).all()
+        print(f"Admin not found: {payload.email}. Total admins in DB: {len(all_admins)}")
+        if all_admins:
+            print(f"Existing admins: {[a.email for a in all_admins]}")
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
     if not verify_password(payload.password, admin.password_hash):
