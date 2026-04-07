@@ -46,18 +46,16 @@ export default function AdminSidebar() {
         <Link href="/admin/kloter/new" className={`sid-item${isActive("/admin/kloter/new") ? " active" : ""}`}>
           <span className="sid-emoji">✨</span> Buat Kloter
         </Link>
-        <div className="sid-item" style={{ opacity: 0.5, cursor: "not-allowed" }}>
-          <span className="sid-emoji">🏦</span> Akun Bank
-          <span className="sid-badge purple">Soon</span>
-        </div>
-        <div className="sid-item" style={{ opacity: 0.5, cursor: "not-allowed" }}>
-          <span className="sid-emoji">📊</span> Laporan
-          <span className="sid-badge purple">Soon</span>
-        </div>
+        <Link href="/admin/users" className={`sid-item${isActive("/admin/users") ? " active" : ""}`}>
+          <span className="sid-emoji">🔐</span> Kelola Admin
+        </Link>
       </div>
 
       <div className="sid-section sid-footer">
         <div className="sid-label">LAINNYA</div>
+        <Link href="/admin/profile" className={`sid-item${isActive("/admin/profile") ? " active" : ""}`}>
+          <span className="sid-emoji">👤</span> Profil Saya
+        </Link>
         <div className="sid-item" onClick={handleLogout} style={{ cursor: "pointer" }}>
           <span className="sid-emoji">🚪</span> Keluar
         </div>
