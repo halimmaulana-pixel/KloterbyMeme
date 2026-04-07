@@ -23,3 +23,4 @@ api_router.include_router(periods.router, prefix="/collections", tags=["collecti
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 api_router.include_router(disbursements.router, prefix="/disbursements", tags=["disbursements"])
 api_router.include_router(members.router, prefix="/member", tags=["member"])
+api_router.include_router(admin_users.router, prefix="/admin-users", tags=["admin-management"])
