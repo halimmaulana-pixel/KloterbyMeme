@@ -19,11 +19,18 @@ class Settings(BaseSettings):
 
     @property
     def sqlalchemy_database_url(self) -> str:
-        if self.database_url.startswith("postgres://"):
-            return self.database_url.replace("postgres://", "postgresql+psycopg://", 1)
-        if self.database_url.startswith("postgresql://"):
-            return self.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
-        return self.database_url
+        url = self.database_url
+        if not url or url.strip() == "":
+            # Fallback to sqlite if empty to prevent crash during build/dry-run
+            return "sqlite:///./kloterby.db"
+        
+        if url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql+psycopg://", 1)
+        if url.startswith("postgresql://"):
+            # Ensure we use psycopg (v3) which is in requirements.txt
+            if "+psycopg" not in url:
+                return url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return url
 
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"
