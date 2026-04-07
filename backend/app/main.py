@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.config import settings
-from app.database import engine, Base, SessionLocal
+from app.database import engine, Base, SessionLocal, get_db
 from app.models.admin import AdminUser
 from seed_data import seed
 
