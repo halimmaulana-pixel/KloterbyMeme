@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import AdminLayout from "../../../components/admin/AdminLayout";
+import PaymentDetailModal from "../../../components/admin/PaymentDetailModal";
 import api from "../../../lib/api";
 
 const fmtWa = (wa) => wa?.startsWith("62") ? "0" + wa.slice(2) : (wa || "—");
@@ -49,6 +50,8 @@ export default function AdminKloterDetail() {
   const [addMemberId, setAddMemberId] = useState("");
   const [addBusy, setAddBusy] = useState(false);
   const [addErr, setAddErr] = useState("");
+  const [modalItem, setModalItem] = useState(null);
+  const [modalBusy, setModalBusy] = useState(false);
 
   const loadDetail = (alive = true) => {
     Promise.all([
@@ -63,9 +66,19 @@ export default function AdminKloterDetail() {
           .filter((x) => !kloterName || x.kloter_name === kloterName)
           .slice(0, 5)
           .map((x) => ({
-            id: x.id, name: x.member_name,
+            id: x.id,
+            name: x.member_name,
+            member_name: x.member_name,
+            member_wa: x.member_wa,
+            kloter_name: x.kloter_name,
+            period_number: x.period_number,
             subtitle: `${x.kloter_name} · Periode ${x.period_number}`,
             amount: x.expected_amount,
+            expected_amount: x.expected_amount,
+            unique_code: x.unique_code,
+            status: x.status,
+            due_datetime: x.due_datetime,
+            proof_url: x.proof_url,
             time: new Date(x.due_datetime).toLocaleString("id-ID"),
             tone: x.status === "manual_review" ? "o" : x.status === "late" ? "r" : "p",
           }));
@@ -94,6 +107,30 @@ export default function AdminKloterDetail() {
       setAddErr(err.response?.data?.detail || "Gagal menambah member");
     }
     setAddBusy(false);
+  };
+
+  const handleApprove = async (expectationId) => {
+    setModalBusy(true);
+    try {
+      await api.post(`/payments/${expectationId}/verify`);
+      setModalItem(null);
+      loadDetail();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Gagal approve. Coba lagi.");
+    }
+    setModalBusy(false);
+  };
+
+  const handleReject = async (expectationId) => {
+    setModalBusy(true);
+    try {
+      await api.post(`/payments/${expectationId}/reject`, { note: "Ditolak dari detail kloter" });
+      setModalItem(null);
+      loadDetail();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Gagal reject. Coba lagi.");
+    }
+    setModalBusy(false);
   };
 
   const grossGet = detail.contribution * detail.slot_total;
@@ -347,7 +384,7 @@ export default function AdminKloterDetail() {
                 <div style={{ textAlign: "center", padding: "20px 0", color: "var(--t3)", fontSize: 12 }}>Tidak ada antrian 🎉</div>
               ) : (
                 detail.queue.map((q) => (
-                  <div key={q.id} className="verif-item">
+                  <div key={q.id} className="verif-item" style={{ cursor: "pointer" }} onClick={() => setModalItem(q)}>
                     <div className="verif-avatar" style={{ background: toneColor[q.tone || "p"] }}>
                       {q.name.slice(0, 2).toUpperCase()}
                     </div>
@@ -356,10 +393,12 @@ export default function AdminKloterDetail() {
                       <div className="verif-sub">{q.subtitle}</div>
                       <div className="verif-amount">{fmtRp(q.amount)}</div>
                       <div className="verif-time">{q.time}</div>
-                      <div className="verif-actions">
-                        <button className="vbtn vbtn-ok">✓ Approve</button>
-                        <button className="vbtn vbtn-no">✕ Tolak</button>
-                        <button className="vbtn vbtn-wa">💬 WA</button>
+                      <div className="verif-actions" onClick={(e) => e.stopPropagation()}>
+                        <button className="vbtn vbtn-ok" onClick={() => handleApprove(q.id)}>✓ Approve</button>
+                        <button className="vbtn vbtn-no" onClick={() => handleReject(q.id)}>✕ Tolak</button>
+                        {q.member_wa && (
+                          <a href={`https://wa.me/${q.member_wa}`} target="_blank" rel="noreferrer" className="vbtn vbtn-wa">💬 WA</a>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -447,6 +486,16 @@ export default function AdminKloterDetail() {
             </div>
           </div>
         </div>
+      )}
+
+      {modalItem && (
+        <PaymentDetailModal
+          item={modalItem}
+          onClose={() => setModalItem(null)}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          busy={modalBusy}
+        />
       )}
     </AdminLayout>
   );

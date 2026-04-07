@@ -17,6 +17,14 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./kloterby.db"
 
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        if self.database_url.startswith("postgres://"):
+            return self.database_url.replace("postgres://", "postgresql+psycopg://", 1)
+        if self.database_url.startswith("postgresql://"):
+            return self.database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return self.database_url
+
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 1440
@@ -32,8 +40,6 @@ class Settings(BaseSettings):
     wa_provider: str = "fonnte"
     wa_base_url: str = "https://api.fonnte.com"
     wa_token: str = ""
-
-    next_public_api_base_url: str = "http://127.0.0.1:8001/api"
 
 
 @lru_cache

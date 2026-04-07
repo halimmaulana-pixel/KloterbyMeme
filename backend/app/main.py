@@ -5,6 +5,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.config import settings
+from app.database import engine, Base, SessionLocal
+from app.models.admin import AdminUser
+from seed_data import seed
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -16,6 +19,20 @@ def create_app() -> FastAPI:
         debug=settings.app_debug,
         version="0.1.0",
     )
+
+    @app.on_event("startup")
+    def on_startup():
+        # Create tables
+        Base.metadata.create_all(bind=engine)
+        # Check if we need to seed
+        db = SessionLocal()
+        try:
+            admin = db.query(AdminUser).first()
+            if not admin:
+                print("No admin found. Seeding data...")
+                seed()
+        finally:
+            db.close()
 
     app.add_middleware(
         CORSMiddleware,

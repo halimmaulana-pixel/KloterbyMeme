@@ -30,6 +30,7 @@ def payment_queue(
         result.append({
             "id": str(item.id),
             "member_name": item.membership.member.name,
+            "member_wa": item.membership.member.wa,
             "kloter_name": item.membership.kloter.name,
             "period_number": item.period.period_number,
             "expected_amount": item.expected_amount,
