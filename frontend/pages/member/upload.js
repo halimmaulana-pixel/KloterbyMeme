@@ -6,16 +6,11 @@ import api from "../../lib/api";
 const fmtRp = (n) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
-const FALLBACK = [
-  { id: "p1", kloter_name: "Kloter 254",     expected_amount: 1000000, unique_code: "254005", deadline_hour: 20 },
-  { id: "p2", kloter_name: "Kloter 401 Mgg", expected_amount: 500000,  unique_code: "401002", deadline_hour: 20 },
-];
-
 export default function MemberUpload() {
   const router = useRouter();
   const { id: queryId } = router.query;
 
-  const [payments, setPayments] = useState(FALLBACK);
+  const [payments, setPayments] = useState([]);
   const [active, setActive] = useState(null);
   const [file, setFile]       = useState(null);
   const [preview, setPreview] = useState(null);
@@ -69,14 +64,28 @@ export default function MemberUpload() {
 
   const removeFile = () => { setFile(null); setPreview(null); if (inputRef.current) inputRef.current.value = ""; };
 
+  const [banks, setBanks] = useState([]);
+  const [selectedBank, setSelectedBank] = useState("");
+
+  useEffect(() => {
+    api.get("/bank/member/list").then(r => {
+      setBanks(r.data);
+      if (r.data.length > 0) setSelectedBank(r.data[0].id);
+    }).catch(err => console.error("Gagal load bank", err));
+  }, []);
+
   const submit = async () => {
     if (!active || !file) { setError("Pilih pembayaran dan file terlebih dahulu"); return; }
+    if (!selectedBank) { setError("Pilih bank tujuan transfer"); return; }
     setUploading(true); setError(""); setSuccess(false);
     try {
       const fd = new FormData();
       fd.append("file", file);
       if (note) fd.append("note", note);
-      const res = await api.post(`/payments/member/${active}/proof`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+      
+      const res = await api.post(`/payments/member/${active}/proof?bank_account_id=${selectedBank}`, fd, { 
+        headers: { "Content-Type": "multipart/form-data" } 
+      });
       
       // Update local state to show 'Menunggu' immediately
       setPayments((prev) => prev.map((p) => p.id === active ? { ...p, status: "proof_uploaded", proof_url: res.data.proof_url } : p));
@@ -200,8 +209,33 @@ export default function MemberUpload() {
 
         {/* RIGHT: upload */}
         <div>
+          {/* Bank selector */}
           <div className="detail-card" style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)", marginBottom: 14 }}>📸 Upload Bukti Transfer</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--ink2)", marginBottom: 10 }}>2️⃣ Transfer ke Mana?</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8 }}>
+              {banks.map((b) => (
+                <div
+                  key={b.id}
+                  onClick={() => setSelectedBank(b.id)}
+                  style={{
+                    padding: "10px 12px", borderRadius: 10, cursor: "pointer", border: "1.5px solid",
+                    borderColor: selectedBank === b.id ? "var(--vio)" : "var(--bd)",
+                    background: selectedBank === b.id ? "var(--vio-l)" : "var(--surf2)",
+                    transition: "all .15s", position: "relative"
+                  }}
+                >
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "var(--ink3)", textTransform: "uppercase" }}>{b.bank_name}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "var(--ink)", margin: "2px 0" }}>{b.account_number}</div>
+                  <div style={{ fontSize: 10, color: "var(--ink3)" }}>an. {b.account_holder_name}</div>
+                  {selectedBank === b.id && <div style={{ position: "absolute", top: 6, right: 6, fontSize: 12 }}>✅</div>}
+                </div>
+              ))}
+            </div>
+            {banks.length === 0 && <div style={{ fontSize: 12, color: "var(--ink3)", textAlign: "center", padding: 10 }}>Tidak ada rekening admin aktif. Hubungi admin.</div>}
+          </div>
+
+          <div className="detail-card" style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--ink)", marginBottom: 14 }}>3️⃣ Upload Bukti Transfer</div>
 
             {/* Upload zone */}
             <div

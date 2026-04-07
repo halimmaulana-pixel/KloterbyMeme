@@ -48,6 +48,10 @@ export default function MemberSidebar() {
         </Link>
 
         <div className="sb-section">Lainnya</div>
+        <Link href="/member/profile" className={`sb-item${isActive("/member/profile") ? " active" : ""}`}>
+          <span className="sb-icon">👤</span>
+          <span className="sb-label">Profil Saya</span>
+        </Link>
         <div className="sb-item" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           <span className="sb-icon">🎯</span>
           <span className="sb-label">Giliran GET</span>

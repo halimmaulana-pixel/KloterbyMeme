@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from fastapi import APIRouter, Depends
 from app.api.deps import get_db
-from app.api.routes import auth, dashboard, disbursements, kloter, members, payments, periods, admin_users
+from app.api.routes import auth, dashboard, disbursements, kloter, members, payments, periods, admin_users, bank, reports
 from app.config import settings
 
 api_router = APIRouter()
@@ -24,3 +24,5 @@ api_router.include_router(payments.router, prefix="/payments", tags=["payments"]
 api_router.include_router(disbursements.router, prefix="/disbursements", tags=["disbursements"])
 api_router.include_router(members.router, prefix="/member", tags=["member"])
 api_router.include_router(admin_users.router, prefix="/admin-users", tags=["admin-management"])
+api_router.include_router(bank.router, prefix="/bank", tags=["bank"])
+api_router.include_router(reports.router, prefix="/reports", tags=["reports"])

@@ -71,7 +71,9 @@ export default function MemberHome() {
           <div className="wb-emoji">🎉</div>
           <div className="wb-text">
             <div className="wb-hi">Selamat datang kembali!</div>
-            <div className="wb-name">{memberName || "Anggota Kloter"}</div>
+            <Link href="/member/profile" style={{ textDecoration: "none" }}>
+              <div className="wb-name">{memberName || "Anggota Kloter"} ⚙️</div>
+            </Link>
             <div className="wb-sub">
               {pending > 0 ? `Ada ${pending} pembayaran yang perlu dikirim buktinya` : kloters.length > 0 ? "Semua pembayaran kamu up-to-date! 🎉" : "Kamu belum mengikuti kloter apapun"}
             </div>

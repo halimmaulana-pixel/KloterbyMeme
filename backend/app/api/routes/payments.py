@@ -103,6 +103,7 @@ def bulk_verify(
 async def upload_member_proof(
     expectation_id: str,
     file: UploadFile = File(...),
+    bank_account_id: str | None = None,
     db=Depends(get_db),
     member: CurrentMember = Depends(get_current_member),
 ):
@@ -123,6 +124,7 @@ async def upload_member_proof(
     attempt = PaymentAttempt(
         expectation_id=expectation.id,
         proof_url=proof_url,
+        bank_account_id=bank_account_id,
         status="proof_uploaded",
     )
     db.add(attempt)

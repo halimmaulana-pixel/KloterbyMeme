@@ -11,15 +11,21 @@ from app.services.period_service import PeriodService
 
 
 class PaymentService:
-    def verify_payment(self, db, expectation, admin_id):
+    def verify_payment(self, db, expectation, admin_id, bank_account_id=None):
         if expectation.status in PAYMENT_TERMINAL_STATES:
             raise AlreadyVerified()
         if expectation.status not in PAYMENT_VERIFIABLE_STATES:
             raise InvalidStateTransition(expectation.status, PaymentStatus.VERIFIED.value)
 
+        # Get late penalty if any
+        penalty_total = db.query(func.sum(PaymentAttempt.penalty_amount)).filter(
+            PaymentAttempt.expectation_id == expectation.id
+        ).scalar() or 0
+
         attempt = PaymentAttempt(
             expectation_id=expectation.id,
             paid_amount=expectation.expected_amount,
+            bank_account_id=bank_account_id,
             status=PaymentStatus.VERIFIED.value,
             verified_by=admin_id,
             verified_at=datetime.now(timezone.utc),
@@ -36,15 +42,33 @@ class PaymentService:
             progress.expected_count, 1
         )
 
+        # Record Ledger with Categories
+        # 1. Main Iuran
         db.add(
             LedgerEntry(
                 tenant_id=expectation.membership.kloter.tenant_id,
                 type="payment_in",
+                category="iuran",
+                bank_account_id=bank_account_id,
                 amount=expectation.expected_amount,
                 reference_id=expectation.id,
-                description="Payment verified",
+                description=f"Iuran {expectation.membership.member.name} - {expectation.membership.kloter.name}",
             )
         )
+        
+        # 2. Penalty (if any)
+        if penalty_total > 0:
+            db.add(
+                LedgerEntry(
+                    tenant_id=expectation.membership.kloter.tenant_id,
+                    type="payment_in",
+                    category="denda",
+                    bank_account_id=bank_account_id,
+                    amount=penalty_total,
+                    reference_id=expectation.id,
+                    description=f"Denda {expectation.membership.member.name}",
+                )
+            )
 
         AuditService().log(
             db=db,
@@ -64,6 +88,28 @@ class PaymentService:
                 "membership_id": str(expectation.membership_id),
             },
         )
+        return expectation
+
+    def bailout_payment(self, db, expectation, admin_id):
+        """Admin bails out a late payment to keep the kloter moving."""
+        if expectation.status != PaymentStatus.LATE.value:
+            return expectation
+        
+        expectation.is_bailout = True
+        expectation.bailout_amount = expectation.expected_amount
+        
+        # In Ledger, this moves money from Admin's 'Virtual Drawer' to Kloter Drawer
+        db.add(
+            LedgerEntry(
+                tenant_id=expectation.membership.kloter.tenant_id,
+                type="transfer",
+                category="bailout",
+                amount=expectation.expected_amount,
+                reference_id=expectation.id,
+                description=f"Bailout for {expectation.membership.member.name}",
+            )
+        )
+        db.commit()
         return expectation
 
     def reject_payment(self, db, expectation, admin_id, note: str | None = None):

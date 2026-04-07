@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { getToken, getRole } from "../../lib/auth";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
+import "../../styles/admin.css";
 
 export default function AdminLayout({ title, subtitle, children }) {
   const router = useRouter();

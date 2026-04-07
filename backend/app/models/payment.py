@@ -26,6 +26,8 @@ class PaymentExpectation(Base):
     unique_code: Mapped[int] = mapped_column(Integer, nullable=False)
     due_datetime: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="expected")
+    is_bailout: Mapped[bool] = mapped_column(default=False)
+    bailout_amount: Mapped[int] = mapped_column(BigInteger, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -45,6 +47,9 @@ class PaymentAttempt(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(), primary_key=True, default=uuid.uuid4)
     expectation_id: Mapped[uuid.UUID] = mapped_column(
         UUID(), ForeignKey("payment_expectations.id"), nullable=False
+    )
+    bank_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(), ForeignKey("bank_accounts.id")
     )
     paid_amount: Mapped[int | None] = mapped_column(BigInteger)
     proof_url: Mapped[str | None] = mapped_column(Text)

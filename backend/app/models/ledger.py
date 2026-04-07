@@ -16,6 +16,10 @@ class LedgerEntry(Base):
         UUID(), ForeignKey("tenants.id"), nullable=False
     )
     type: Mapped[str] = mapped_column(String(20), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), nullable=False, default="iuran")
+    bank_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(), ForeignKey("bank_accounts.id")
+    )
     amount: Mapped[int] = mapped_column(BigInteger, nullable=False)
     reference_id: Mapped[uuid.UUID | None] = mapped_column(UUID())
     description: Mapped[str | None] = mapped_column(Text)

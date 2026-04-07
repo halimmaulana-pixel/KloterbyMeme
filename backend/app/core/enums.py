@@ -46,3 +46,5 @@ class LedgerType(str, Enum):
     GET_OUT = "get_out"
     FEE_IN = "fee_in"
     PENALTY_IN = "penalty_in"
+    BAILOUT_OUT = "bailout_out"
+    BAILOUT_REPAY = "bailout_repay"

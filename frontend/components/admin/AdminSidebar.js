@@ -46,6 +46,15 @@ export default function AdminSidebar() {
         <Link href="/admin/kloter/new" className={`sid-item${isActive("/admin/kloter/new") ? " active" : ""}`}>
           <span className="sid-emoji">✨</span> Buat Kloter
         </Link>
+        <Link href="/admin/bank" className={`sid-item${isActive("/admin/bank") ? " active" : ""}`}>
+          <span className="sid-emoji">🏦</span> Akun Bank
+        </Link>
+        <Link href="/admin/reports" className={`sid-item${isActive("/admin/reports") ? " active" : ""}`}>
+          <span className="sid-emoji">📊</span> Laporan Keuangan
+        </Link>
+        <Link href="/admin/member-quality" className={`sid-item${isActive("/admin/member-quality") ? " active" : ""}`}>
+          <span className="sid-emoji">⭐</span> Kualitas Member
+        </Link>
         <Link href="/admin/users" className={`sid-item${isActive("/admin/users") ? " active" : ""}`}>
           <span className="sid-emoji">🔐</span> Kelola Admin
         </Link>

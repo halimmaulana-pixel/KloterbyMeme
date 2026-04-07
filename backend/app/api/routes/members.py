@@ -126,8 +126,8 @@ def member_profile(
     }
 
 
-@router.put("/profile/bank")
-def member_update_bank(
+@router.put("/profile")
+def member_update_profile(
     payload: dict = Body(...),
     db=Depends(get_db),
     member: CurrentMember = Depends(get_current_member),
@@ -135,11 +135,23 @@ def member_update_bank(
     m = db.execute(select(Member).where(Member.id == member.id)).scalar_one_or_none()
     if not m:
         raise HTTPException(status_code=404, detail="Member not found")
-    m.bank_name = payload.get("bank_name") or m.bank_name
-    m.bank_account_number = payload.get("bank_account_number") or m.bank_account_number
-    m.bank_account_name = payload.get("bank_account_name") or m.bank_account_name
+    
+    # Update basic info
+    if "name" in payload:
+        m.name = payload["name"] or m.name
+    if "nik" in payload:
+        m.nik = payload["nik"] or m.nik
+        
+    # Update bank info
+    if "bank_name" in payload:
+        m.bank_name = payload["bank_name"] or m.bank_name
+    if "bank_account_number" in payload:
+        m.bank_account_number = payload["bank_account_number"] or m.bank_account_number
+    if "bank_account_name" in payload:
+        m.bank_account_name = payload["bank_account_name"] or m.bank_account_name
+        
     db.commit()
-    return {"status": "updated"}
+    return {"status": "updated", "name": m.name}
 
 
 @router.get("/home")

@@ -18,6 +18,7 @@ class BankAccount(Base):
     bank_name: Mapped[str] = mapped_column(String(50), nullable=False)
     account_number: Mapped[str] = mapped_column(String(50), nullable=False)
     account_holder_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[str] = mapped_column(String(20), nullable=False, default="bank")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
