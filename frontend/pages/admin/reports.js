@@ -1,5 +1,6 @@
 import AdminLayout from "../../components/admin/AdminLayout";
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import api from "../../lib/api";
 
 const fmtRp = (n) =>
@@ -20,79 +21,123 @@ export default function AdminReports() {
     }).catch(e => console.error(e)).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <AdminLayout title="Laporan Keuangan"><div>Loading...</div></AdminLayout>;
-
   return (
-    <AdminLayout title="Laporan Keuangan">
-      <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ fontSize: 20 }}>💰 4 Laci Virtual (Real-time)</h2>
-          <div className="card" style={{ padding: "8px 16px", background: "var(--vio-l)", border: "1.5px solid var(--vio)", color: "var(--vio-d)", fontWeight: 800 }}>
-            Kas Tersedia: {fmtRp(summary.total_cash)}
+    <AdminLayout title="Laporan Keuangan" subtitle="Pantau 4 Laci Virtual & Piutang Member ✨">
+      <Head>
+        <title>Laporan Keuangan | Admin Kloterby ✨</title>
+      </Head>
+
+      {loading ? (
+        <div className="loading-state">Menghitung laci virtual... 💰</div>
+      ) : (
+        <div className="reports-container">
+          {/* Header Summary */}
+          <div className="welcome-banner" style={{ background: 'linear-gradient(135deg, #1e1b4b, #312e81, #4338ca)', marginBottom: '24px' }}>
+            <div className="wb-inner">
+              <div className="wb-emoji">💰</div>
+              <div className="wb-text">
+                <div className="wb-hi">KAS TERSEDIA (CASH ON HAND)</div>
+                <div className="wb-name" style={{ fontSize: '32px' }}>{fmtRp(summary.total_cash)}</div>
+                <div className="wb-sub">Total uang tunai dari Laci Modal, Profit, dan Denda.</div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-          <div className="card" style={{ background: "#f0f9ff", border: "1px solid #bae6fd" }}>
-            <div style={{ fontSize: 13, color: "#0369a1", fontWeight: 700 }}>1. Laci Modal (Pokok Iuran)</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: "#0c4a6e", margin: "8px 0" }}>{fmtRp(summary.laci_modal)}</div>
-            <div style={{ fontSize: 11, color: "#075985" }}>Total uang iuran yang mengendap.</div>
+
+          {/* 4 Virtual Drawers */}
+          <div className="grid2" style={{ marginBottom: '24px' }}>
+            <div className="detail-card highlight" style={{ borderLeft: '5px solid #0ea5e9' }}>
+              <div className="kc-head">
+                <div className="kc-name">1. Laci Modal</div>
+                <div className="stat-icon sky" style={{ background: '#e0f2fe', color: '#0369a1' }}>🏦</div>
+              </div>
+              <div className="stat-val" style={{ fontSize: '24px', margin: '10px 0' }}>{fmtRp(summary.laci_modal)}</div>
+              <p style={{ fontSize: '12px', color: '#64748b' }}>Total uang iuran member yang mengendap di sistem.</p>
+            </div>
+
+            <div className="detail-card highlight" style={{ borderLeft: '5px solid #10b981' }}>
+              <div className="kc-head">
+                <div className="kc-name">2. Laci Profit</div>
+                <div className="stat-icon mint" style={{ background: '#d1fae5', color: '#065f46' }}>💎</div>
+              </div>
+              <div className="stat-val" style={{ fontSize: '24px', margin: '10px 0' }}>{fmtRp(summary.laci_profit)}</div>
+              <p style={{ fontSize: '12px', color: '#64748b' }}>Keuntungan murni dari Biaya Admin (Fee).</p>
+            </div>
+
+            <div className="detail-card highlight" style={{ borderLeft: '5px solid #f43f5e' }}>
+              <div className="kc-head">
+                <div className="kc-name">3. Laci Piutang</div>
+                <div className="stat-icon rose" style={{ background: '#ffe4e6', color: '#9f1239' }}>💸</div>
+              </div>
+              <div className="stat-val" style={{ fontSize: '24px', margin: '10px 0', color: '#e11d48' }}>{fmtRp(summary.laci_piutang)}</div>
+              <p style={{ fontSize: '12px', color: '#64748b' }}>Total talangan yang belum dikembalikan member.</p>
+            </div>
+
+            <div className="detail-card highlight" style={{ borderLeft: '5px solid #f59e0b' }}>
+              <div className="kc-head">
+                <div className="kc-name">4. Laci Denda</div>
+                <div className="stat-icon amb" style={{ background: '#fef3c7', color: '#92400e' }}>⚖️</div>
+              </div>
+              <div className="stat-val" style={{ fontSize: '24px', margin: '10px 0' }}>{fmtRp(summary.laci_denda)}</div>
+              <p style={{ fontSize: '12px', color: '#64748b' }}>Hasil denda keterlambatan pembayaran member.</p>
+            </div>
           </div>
-          <div className="card" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-            <div style={{ fontSize: 13, color: "#15803d", fontWeight: 700 }}>2. Laci Profit (Admin Fee)</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: "#064e3b", margin: "8px 0" }}>{fmtRp(summary.laci_profit)}</div>
-            <div style={{ fontSize: 11, color: "#166534" }}>Keuntungan murni dari jasa admin.</div>
+
+          {/* Detailed Receivables */}
+          <div className="sec-head">
+            <div className="sec-title">📋 Daftar Talangan Aktif (Piutang)</div>
           </div>
-          <div className="card" style={{ background: "#fef2f2", border: "1px solid #fecaca" }}>
-            <div style={{ fontSize: 13, color: "#b91c1c", fontWeight: 700 }}>3. Laci Piutang (Talangan)</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: "#7f1d1d", margin: "8px 0" }}>{fmtRp(summary.laci_piutang)}</div>
-            <div style={{ fontSize: 11, color: "#991b1b" }}>Uang Anda yang masih dipinjam member.</div>
-          </div>
-          <div className="card" style={{ background: "#fffbeb", border: "1px solid #fef3c7" }}>
-            <div style={{ fontSize: 13, color: "#b45309", fontWeight: 700 }}>4. Laci Denda</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: "#78350f", margin: "8px 0" }}>{fmtRp(summary.laci_denda)}</div>
-            <div style={{ fontSize: 11, color: "#92400e" }}>Hasil denda keterlambatan member.</div>
-          </div>
-        </div>
-        <div style={{ marginTop: 24 }}>
-          <h3 style={{ fontSize: 16, marginBottom: 12 }}>📋 Detail Piutang Aktif (Daftar Talangan)</h3>
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Member</th>
-                  <th>Kloter</th>
-                  <th>Periode</th>
-                  <th>Jumlah</th>
-                  <th>Jatuh Tempo</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {receivables.map(r => (
-                  <tr key={r.id}>
-                    <td><b>{r.member_name}</b></td>
-                    <td>{r.kloter_name}</td>
-                    <td>Ke-{r.period_number}</td>
-                    <td style={{ color: "var(--rose)", fontWeight: 700 }}>{fmtRp(r.amount)}</td>
-                    <td>{new Date(r.due_date).toLocaleDateString('id-ID')}</td>
-                    <td>
-                      <button className="btn-sms" onClick={() => window.open(`https://wa.me/${r.wa}?text=Halo%20${r.member_name},%20iuran%20${r.kloter_name}%20periode%20${r.period_number}%20sudah%20ditalangi%20Admin.%20Mohon%20segera%20dilunasi%20ya.`, "_blank")}>
-                        💬 Tagih WA
+
+          <div className="detail-card">
+            {receivables.length > 0 ? (
+              <div className="timeline">
+                {receivables.map((r, i) => (
+                  <div key={r.id} className="tl-item">
+                    <div className="tl-dot telat" style={{ background: '#fff1f2', borderColor: '#fda4af' }}>🚨</div>
+                    <div className="tl-body">
+                      <div className="tl-period">{r.kloter_name} — Periode {r.period_number}</div>
+                      <div className="tl-desc"><b>{r.member_name}</b> belum membayar talangan</div>
+                      <div className="tl-meta">Jatuh Tempo: {new Date(r.due_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                      <button 
+                        className="btn-wa" 
+                        style={{ marginTop: '10px', width: 'auto', padding: '6px 12px', fontSize: '12px' }}
+                        onClick={() => window.open(`https://wa.me/${r.wa}?text=Halo%20${r.member_name},%20iuran%20${r.kloter_name}%20periode%20${r.period_number}%20sudah%20ditalangi%20Admin.%20Mohon%20segera%20dilunasi%20ya.`, "_blank")}
+                      >
+                        💬 Tagih via WhatsApp
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="tl-amount telat" style={{ alignSelf: 'center', fontSize: '18px' }}>
+                      {fmtRp(r.amount)}
+                    </div>
+                  </div>
                 ))}
-                {receivables.length === 0 && (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: 20, color: "var(--t3)" }}>Tidak ada piutang aktif. Semua iuran sudah lunas!</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🌈</div>
+                <div className="sec-title">Semua Beres!</div>
+                <p style={{ color: '#64748b' }}>Tidak ada piutang aktif saat ini.</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
+
+      <style jsx>{`
+        .loading-state {
+          padding: 100px 20px;
+          text-align: center;
+          font-size: 1.2rem;
+          color: #64748b;
+          font-weight: 600;
+        }
+        .reports-container {
+          animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </AdminLayout>
   );
 }
