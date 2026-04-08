@@ -33,7 +33,20 @@ export default function LoginPage() {
         router.push("/member/home");
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Ups! Nomor HP atau password salah nih. Coba cek lagi ya! ✨");
+      // Handle various error formats from FastAPI
+      let msg = "Ups! Nomor HP atau password salah nih. Coba cek lagi ya! ✨";
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        if (typeof detail === 'string') {
+          msg = detail;
+        } else if (Array.isArray(detail)) {
+          // Typically for 422 validation errors
+          msg = detail[0]?.msg || JSON.stringify(detail[0]);
+        } else if (typeof detail === 'object') {
+          msg = detail.msg || JSON.stringify(detail);
+        }
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
