@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 
 from app.api.deps import CurrentAdmin, CurrentMember, get_current_admin, get_current_member, get_db
+from app.core.security import hash_password, verify_password
 from app.models.kloter import Kloter
 from app.models.member import Member
 from app.models.membership import Membership
@@ -600,3 +601,34 @@ def member_join_kloter(
 
     db.commit()
     return {"status": "joined", "slot": next_slot, "kloter": kloter.name}
+
+@router.post("/change-password")
+def member_change_password(
+    payload: dict = Body(...),
+    db=Depends(get_db),
+    member: CurrentMember = Depends(get_current_member),
+):
+    m = db.execute(select(Member).where(Member.id == member.id)).scalar_one_or_none()
+    if not m:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    old_password = payload.get("old_password")
+    new_password = payload.get("new_password")
+    
+    if not old_password or not new_password:
+        raise HTTPException(status_code=400, detail="Password lama dan baru diperlukan")
+        
+    # Check old password
+    is_valid = False
+    if m.password_hash:
+        is_valid = verify_password(old_password, m.password_hash)
+    else:
+        # Default password is WA
+        is_valid = (old_password == m.wa)
+        
+    if not is_valid:
+        raise HTTPException(status_code=401, detail="Password lama salah")
+        
+    m.password_hash = hash_password(new_password)
+    db.commit()
+    return {"status": "success", "message": "Password berhasil diubah"}

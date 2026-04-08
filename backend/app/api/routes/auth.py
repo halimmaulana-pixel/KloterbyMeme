@@ -17,30 +17,49 @@ router = APIRouter()
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: LoginRequest, db=Depends(get_db)):
-    print(f"Login attempt for email: {payload.email}")
+    # 1. Try Admin Login (by email)
     admin = AdminRepository(db).get_by_email(payload.email)
-    if not admin:
-        all_admins = db.query(AdminUser).all()
-        print(f"Admin not found: {payload.email}. Total admins in DB: {len(all_admins)}")
-        if all_admins:
-            print(f"Existing admins: {[a.email for a in all_admins]}")
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+    if admin:
+        if verify_password(payload.password, admin.password_hash):
+            token = create_access_token(
+                subject=admin.email,
+                role="admin",
+                tenant_id=str(admin.tenant_id),
+            )
+            return TokenResponse(
+                access_token=token,
+                role="admin",
+                tenant_id=str(admin.tenant_id),
+            )
+
+    # 2. Try Member Login (payload.email will act as the WA number here)
+    # Get first tenant (assuming single tenant or default)
+    tenant = TenantRepository(db).get_first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="No tenant configured")
     
-    if not verify_password(payload.password, admin.password_hash):
-        print(f"Invalid password for: {payload.email}")
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    print(f"Login successful for: {payload.email}")
-    token = create_access_token(
-        subject=admin.email,
-        role="admin",
-        tenant_id=str(admin.tenant_id),
-    )
-    return TokenResponse(
-        access_token=token,
-        role="admin",
-        tenant_id=str(admin.tenant_id),
-    )
+    member = MemberRepository(db).get_by_wa(tenant.id, payload.email)
+    if member and member.status == "active":
+        # If password_hash is null, default password is the WA number itself
+        is_valid = False
+        if member.password_hash:
+            is_valid = verify_password(payload.password, member.password_hash)
+        else:
+            is_valid = (payload.password == member.wa)
+            
+        if is_valid:
+            token = create_access_token(
+                subject=str(member.id),
+                role="member",
+                tenant_id=str(member.tenant_id),
+            )
+            return TokenResponse(
+                access_token=token,
+                role="member",
+                tenant_id=str(member.tenant_id),
+            )
+
+    raise HTTPException(status_code=401, detail="Email/No HP atau password salah")
 
 
 @router.post("/otp/send")

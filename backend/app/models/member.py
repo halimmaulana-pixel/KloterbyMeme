@@ -29,6 +29,7 @@ class Member(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
     reputation_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     registration_type: Mapped[str] = mapped_column(String(10), nullable=False, default="admin")
+    password_hash: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
