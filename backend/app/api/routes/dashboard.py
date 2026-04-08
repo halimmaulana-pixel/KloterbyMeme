@@ -39,3 +39,19 @@ def overview(
             "pending_member_count": pending_member_count,
         },
     }
+
+@router.get("/diagnostic-tenants")
+def diagnostic_tenants(db=Depends(get_db)):
+    from app.models.tenant import Tenant
+    from app.models.admin import AdminUser
+    
+    tenants = db.execute(select(Tenant)).scalars().all()
+    admins = db.execute(select(AdminUser)).scalars().all()
+    members = db.execute(select(Member)).scalars().all()
+    
+    return {
+        "tenants": [{"id": str(t.id), "name": t.name} for t in tenants],
+        "admins": [{"id": str(a.id), "email": a.email, "tenant_id": str(a.tenant_id)} for a in admins],
+        "members_count": len(members),
+        "pending_members": [{"id": str(m.id), "name": m.name, "tenant_id": str(m.tenant_id), "status": m.status} for m in members if m.status == "pending"]
+    }
