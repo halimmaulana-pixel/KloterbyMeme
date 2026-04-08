@@ -8,7 +8,17 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(settings.sqlalchemy_database_url, future=True)
+# Support for SSL if needed (common for Supabase/Neon)
+connect_args = {}
+if settings.sqlalchemy_database_url.startswith("postgresql"):
+    connect_args = {"sslmode": "require"}
+
+engine = create_engine(
+    settings.sqlalchemy_database_url, 
+    future=True,
+    pool_pre_ping=True, # Checks connection health before using it
+    connect_args=connect_args
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
 
