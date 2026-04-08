@@ -41,16 +41,19 @@ export default function MemberSidebar() {
           <span className="sb-icon">🏠</span>
           <span className="sb-label">Dashboard</span>
         </Link>
-        <Link href="/member/upload" className={`sb-item${isActive("/member/upload") ? " active" : ""}`}>
-          <span className="sb-icon">💸</span>
-          <span className="sb-label">Verifikasi & Bayar</span>
-          <span className="sb-pill">!</span>
+        <Link href="/member/banks" className={`sb-item${isActive("/member/banks") ? " active" : ""}`}>
+          <span className="sb-icon">🏦</span>
+          <span className="sb-label">Akun Bank</span>
+        </Link>
+        <Link href="/member/reports" className={`sb-item${isActive("/member/reports") ? " active" : ""}`}>
+          <span className="sb-icon">📊</span>
+          <span className="sb-label">Laporan Keuangan</span>
         </Link>
 
-        <div className="sb-section">Lainnya</div>
-        <Link href="/member/profile" className={`sb-item${isActive("/member/profile") ? " active" : ""}`}>
+        <div className="sb-section">Akun & Keamanan</div>
+        <Link href="/member/settings" className={`sb-item${isActive("/member/settings") ? " active" : ""}`}>
           <span className="sb-icon">👤</span>
-          <span className="sb-label">Profil Saya</span>
+          <span className="sb-label">Profil & Password</span>
         </Link>
         <div className="sb-item" style={{ opacity: 0.5, cursor: "not-allowed" }}>
           <span className="sb-icon">🎯</span>

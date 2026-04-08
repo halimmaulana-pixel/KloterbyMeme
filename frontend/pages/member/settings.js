@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import api from "../../lib/api";
+import MemberLayout from "../../components/member/MemberLayout";
 
 export default function MemberSettings() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function MemberSettings() {
         old_password: passwords.old_password,
         new_password: passwords.new_password
       });
-      setMsg({ type: "success", text: "Password berhasil diperbarui!" });
+      setMsg({ type: "success", text: "Password berhasil diperbarui! ✨" });
       setPasswords({ old_password: "", new_password: "", confirm_password: "" });
     } catch (err) {
       setMsg({ type: "error", text: err.response?.data?.detail || "Gagal mengubah password" });
@@ -48,146 +49,105 @@ export default function MemberSettings() {
   };
 
   return (
-    <div className="container">
+    <MemberLayout title="Pengaturan Akun" subtitle="Kelola profil dan keamanan akun kamu">
       <Head>
-        <title>Pengaturan Akun | Kloterby</title>
+        <title>Pengaturan Akun | Kloterby Meme ✨</title>
       </Head>
 
-      <div className="header">
-        <Link href="/member/home">
-          <a className="back-btn">← Kembali</a>
-        </Link>
-        <h1>Pengaturan Akun</h1>
-      </div>
-
-      <div className="card">
-        <h2>Informasi Profil</h2>
-        {profile ? (
-          <div className="profile-info">
-            <div className="info-row">
-              <span className="label">Nama</span>
-              <span className="value">{profile.name}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">WhatsApp</span>
-              <span className="value">{profile.wa}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">NIK</span>
-              <span className="value">{profile.nik || "-"}</span>
-            </div>
+      <div className="grid2">
+        {/* Profile Card */}
+        <div className="detail-card highlight">
+          <div className="sec-head">
+            <div className="sec-title">👤 Informasi Profil</div>
           </div>
-        ) : <p>Loading profil...</p>}
-      </div>
-
-      <div className="card">
-        <h2>Ganti Password</h2>
-        <form onSubmit={handleChangePassword}>
-          <div className="form-group">
-            <label>Password Lama</label>
-            <input 
-              type="password" 
-              required 
-              value={passwords.old_password}
-              onChange={e => setPasswords({...passwords, old_password: e.target.value})}
-            />
-          </div>
-          <div className="form-group">
-            <label>Password Baru</label>
-            <input 
-              type="password" 
-              required 
-              value={passwords.new_password}
-              onChange={e => setPasswords({...passwords, new_password: e.target.value})}
-            />
-          </div>
-          <div className="form-group">
-            <label>Konfirmasi Password Baru</label>
-            <input 
-              type="password" 
-              required 
-              value={passwords.confirm_password}
-              onChange={e => setPasswords({...passwords, confirm_password: e.target.value})}
-            />
-          </div>
-
-          {msg.text && (
-            <div className={`alert ${msg.type}`}>
-              {msg.text}
-            </div>
+          {profile ? (
+            <>
+              <div className="info-row">
+                <div className="ir-label">Nama Lengkap</div>
+                <div className="ir-val">{profile.name}</div>
+              </div>
+              <div className="info-row">
+                <div className="ir-label">Nomor WhatsApp</div>
+                <div className="ir-val mono">{profile.wa}</div>
+              </div>
+              <div className="info-row">
+                <div className="ir-label">NIK</div>
+                <div className="ir-val">{profile.nik || "-"}</div>
+              </div>
+              <div className="info-row">
+                <div className="ir-label">Status Akun</div>
+                <div className="ir-val"><span className="tl-status-pill lunas">Aktif ✨</span></div>
+              </div>
+            </>
+          ) : (
+            <div className="loading-state">Memuat profil...</div>
           )}
+        </div>
 
-          <button type="submit" className="save-btn" disabled={loading}>
-            {loading ? "Menyimpan..." : "Simpan Password Baru"}
-          </button>
-        </form>
+        {/* Password Card */}
+        <div className="detail-card">
+          <div className="sec-head">
+            <div className="sec-title">🔒 Ganti Password</div>
+          </div>
+          <form onSubmit={handleChangePassword}>
+            <div className="field">
+              <label className="label">Password Lama</label>
+              <input 
+                className="inp"
+                type="password" 
+                required 
+                placeholder="Masukkan password saat ini"
+                value={passwords.old_password}
+                onChange={e => setPasswords({...passwords, old_password: e.target.value})}
+              />
+            </div>
+            <div className="field">
+              <label className="label">Password Baru</label>
+              <input 
+                className="inp"
+                type="password" 
+                required 
+                placeholder="Minimal 6 karakter"
+                value={passwords.new_password}
+                onChange={e => setPasswords({...passwords, new_password: e.target.value})}
+              />
+            </div>
+            <div className="field">
+              <label className="label">Konfirmasi Password Baru</label>
+              <input 
+                className="inp"
+                type="password" 
+                required 
+                placeholder="Ulangi password baru"
+                value={passwords.confirm_password}
+                onChange={e => setPasswords({...passwords, confirm_password: e.target.value})}
+              />
+            </div>
+
+            {msg.text && (
+              <div className={`tl-status-pill ${msg.type === 'success' ? 'lunas' : 'telat'}`} style={{ width: '100%', justifyContent: 'center', padding: '10px', marginBottom: '15px' }}>
+                {msg.text}
+              </div>
+            )}
+
+            <button type="submit" className="btn-pay" disabled={loading}>
+              {loading ? "Menyimpan..." : "Update Password ✨"}
+            </button>
+          </form>
+        </div>
       </div>
 
       <style jsx>{`
-        .container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 2rem 1rem;
-          font-family: 'Inter', sans-serif;
-          background: #f8fafc;
-          min-height: 100vh;
-        }
-        .header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-        .back-btn {
-          color: #64748b;
-          text-decoration: none;
-          margin-right: 1rem;
-          font-weight: 500;
-        }
-        h1 { font-size: 1.5rem; color: #1e293b; margin: 0; }
-        h2 { font-size: 1.1rem; color: #334155; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-        .card {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 0.75rem;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          margin-bottom: 1.5rem;
-        }
-        .profile-info { display: flex; flex-direction: column; gap: 1rem; }
-        .info-row { display: flex; justify-content: space-between; font-size: 0.95rem; }
-        .label { color: #64748b; }
-        .value { color: #1e293b; font-weight: 500; }
-        
-        .form-group { margin-bottom: 1.25rem; }
-        label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: #475569; font-weight: 500; }
-        input {
-          width: 100%;
-          padding: 0.7rem;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-        }
-        .save-btn {
-          width: 100%;
-          padding: 0.75rem;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-weight: 600;
-          cursor: pointer;
-          margin-top: 1rem;
-        }
-        .save-btn:disabled { background: #94a3b8; }
-        .alert {
-          padding: 0.75rem;
-          border-radius: 0.5rem;
-          font-size: 0.9rem;
-          margin-bottom: 1rem;
+        .loading-state {
+          padding: 20px;
           text-align: center;
+          color: #64748b;
+          font-style: italic;
         }
-        .alert.error { background: #fef2f2; color: #b91c1c; }
-        .alert.success { background: #f0fdf4; color: #16a34a; }
+        .field {
+          margin-bottom: 15px;
+        }
       `}</style>
-    </div>
+    </MemberLayout>
   );
 }
