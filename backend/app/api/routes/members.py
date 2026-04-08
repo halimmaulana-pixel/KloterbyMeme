@@ -119,6 +119,106 @@ from app.core.utils import generate_unique_code, combine_due_datetime
 router = APIRouter()
 
 
+@router.post("/self-register")
+async def member_self_register(
+    name: str = Form(...),
+    wa: str = Form(...),
+    nik: str = Form(...),
+    bank_name: str = Form(None),
+    bank_account_number: str = Form(None),
+    bank_account_name: str = Form(None),
+    selfie: UploadFile = File(...),
+    ktp: UploadFile = File(...),
+    db=Depends(get_db)
+):
+    # Normalize WA
+    wa_raw = wa.strip()
+    if wa_raw.startswith("0"):
+        wa_raw = "62" + wa_raw[1:]
+    
+    # Get default tenant
+    tenant = TenantRepository(db).get_first()
+    if not tenant:
+        raise HTTPException(status_code=500, detail="Tenant not configured")
+
+    # Check existing
+    existing = db.execute(
+        select(Member).where(Member.tenant_id == tenant.id, Member.wa == wa_raw)
+    ).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail="Nomor WA sudah terdaftar")
+
+    # Save images
+    UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    def save_upload(file, prefix):
+        ext = os.path.splitext(file.filename or "img.jpg")[1] or ".jpg"
+        fn = f"{prefix}_{uuid_lib.uuid4()}{ext}"
+        with open(os.path.join(UPLOAD_DIR, fn), "wb") as f:
+            f.write(file.file.read())
+        return f"/uploads/{fn}"
+
+    selfie_url = save_upload(selfie, "selfie")
+    ktp_url = save_upload(ktp, "ktp")
+
+    member = Member(
+        id=uuid_lib.uuid4(),
+        tenant_id=tenant.id,
+        name=name.strip(),
+        wa=wa_raw,
+        nik=nik,
+        bank_name=bank_name,
+        bank_account_number=bank_account_number,
+        bank_account_name=bank_account_name,
+        selfie_url=selfie_url,
+        ktp_url=ktp_url,
+        status="pending",
+        registration_type="self",
+    )
+    db.add(member)
+    db.commit()
+    return {"status": "pending_verification", "message": "Pendaftaran berhasil, menunggu verifikasi admin."}
+
+@router.get("/admin/pending")
+def admin_list_pending(
+    db=Depends(get_db),
+    admin: CurrentAdmin = Depends(get_current_admin),
+):
+    stmt = select(Member).where(Member.tenant_id == admin.tenant_id, Member.status == "pending")
+    members = db.execute(stmt).scalars().all()
+    return [
+        {
+            "id": str(m.id),
+            "name": m.name,
+            "wa": m.wa,
+            "nik": m.nik,
+            "selfie_url": f"http://127.0.0.1:8002{m.selfie_url}" if m.selfie_url else None,
+            "ktp_url": f"http://127.0.0.1:8002{m.ktp_url}" if m.ktp_url else None,
+            "created_at": m.created_at.isoformat()
+        } for m in members
+    ]
+
+@router.post("/admin/{member_id}/verify")
+def admin_verify_member(
+    member_id: str,
+    action: str = Body(..., embed=True), # "approve" or "reject"
+    db=Depends(get_db),
+    admin: CurrentAdmin = Depends(get_current_admin),
+):
+    member = db.execute(select(Member).where(Member.id == member_id, Member.tenant_id == admin.tenant_id)).scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    
+    if action == "approve":
+        member.status = "active"
+    else:
+        member.status = "rejected"
+    
+    db.commit()
+    return {"status": member.status}
+
+
 def _member_dict(m):
     active_kloters = [ms.kloter.name for ms in m.memberships if ms.kloter.status == "active"]
     return {
