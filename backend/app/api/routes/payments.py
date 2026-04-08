@@ -37,7 +37,7 @@ def payment_queue(
             "unique_code": item.unique_code,
             "status": item.status,
             "due_datetime": item.due_datetime,
-            "proof_url": f"http://127.0.0.1:8002{proof_url}" if proof_url else None,
+            "proof_url": proof_url,
         })
     return result
 

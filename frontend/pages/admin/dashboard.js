@@ -85,9 +85,10 @@ export default function AdminDashboard() {
 
   const stats = [
     { emoji: "💰", value: loading ? "…" : overview.today_periods ?? 0, label: "Kloter Aktif", trend: "↑ semua berjalan", tone: "purple" },
-    { emoji: "✅", value: queue.length, label: "Menunggu Verifikasi", trend: "⚡ approve sekarang!", tone: "green" },
-    { emoji: "💸", value: loading ? "…" : overview.ready_get_count ?? 0, label: "Siap Release GET", trend: "siap diproses", tone: "orange" },
+    { emoji: "✅", value: loading ? "…" : overview.pending_member_count ?? 0, label: "Verifikasi Member", trend: "⚡ calon member baru", tone: "orange" },
+    { emoji: "👥", value: loading ? "…" : overview.active_member_count ?? 0, label: "Total Member", trend: "berjalan lancar", tone: "green" },
     { emoji: "🚨", value: loading ? "…" : overview.problem_count ?? 0, label: "Kloter Bermasalah", trend: "butuh perhatian", tone: "red" },
+
   ];
 
   return (
@@ -98,7 +99,7 @@ export default function AdminDashboard() {
         <div className="wb-left">
           <div className="wb-hi">Selamat datang, Admin Meme! ☀️</div>
           <div className="wb-sub">
-            Ada <strong>{queue.length} verifikasi</strong> menunggu · <strong>{overview.problem_count ?? 0} kloter</strong> butuh perhatian
+            Ada <strong>{overview.pending_member_count ?? 0} member baru</strong> menunggu · <strong>{overview.problem_count ?? 0} kloter</strong> butuh perhatian
           </div>
         </div>
         <div className="wb-emoji">🪙</div>

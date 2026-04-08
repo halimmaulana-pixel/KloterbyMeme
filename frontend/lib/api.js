@@ -8,6 +8,17 @@ const api = axios.create({
   timeout: 15000,
 });
 
+export const getBaseURL = () => {
+  return baseURL.replace(/\/api$/, "");
+};
+
+export const getMediaURL = (url) => {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  const base = getBaseURL();
+  return `${base}${url}`;
+};
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = window.localStorage.getItem("kloterby_token");

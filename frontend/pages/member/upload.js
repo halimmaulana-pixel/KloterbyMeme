@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import MemberLayout from "../../components/member/MemberLayout";
-import api from "../../lib/api";
+import api, { getMediaURL } from "../../lib/api";
 
 const fmtRp = (n) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
@@ -164,7 +164,7 @@ export default function MemberUpload() {
               </div>
               <div style={{ marginTop: 10, background: "var(--amb-l)", border: "1.5px solid #fcd34d", borderRadius: 10, padding: "10px 14px", fontSize: 11.5, fontWeight: 700, color: "var(--amb-d)", display: "flex", gap: 8 }}>
                 <span>⚡</span>
-                <span>Transfer tepat <b>{fmtRp(current.expected_amount + Number(current.unique_code))}</b> (iuran + kode unik <b>#{current.unique_code}</b>) untuk verifikasi otomatis!</span>
+                <span>Transfer tepat <b>{fmtRp(current.expected_amount + Number(current.unique_code))}</b> (iuran + kode unik <b>#{current.unique_code}</b>) for verifikasi otomatis!</span>
               </div>
 
               {/* Verified */}
@@ -173,8 +173,8 @@ export default function MemberUpload() {
                   <div style={{ fontSize: 13, fontWeight: 800, color: "#059669", marginBottom: 4 }}>🎉 Pembayaran Lunas!</div>
                   <div style={{ fontSize: 11, fontWeight: 500, color: "#065f46" }}>Admin sudah verifikasi bukti pembayaran kamu. Terima kasih!</div>
                   {current.proof_url && (
-                    <a href={current.proof_url} target="_blank" rel="noreferrer">
-                      <img src={current.proof_url} alt="Bukti bayar" style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, border: "1.5px solid #6ee7b7", cursor: "pointer", marginTop: 8 }} />
+                    <a href={getMediaURL(current.proof_url)} target="_blank" rel="noreferrer">
+                      <img src={getMediaURL(current.proof_url)} alt="Bukti bayar" style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 8, border: "1.5px solid #6ee7b7", cursor: "pointer", marginTop: 8 }} />
                     </a>
                   )}
                 </div>
@@ -192,8 +192,9 @@ export default function MemberUpload() {
               {current.status === "proof_uploaded" && current.proof_url && (
                 <div style={{ marginTop: 12, borderTop: "1.5px solid var(--bd)", paddingTop: 12 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⏳ Bukti dikirim {current.submitted_at && `· ${current.submitted_at}`} · Menunggu verifikasi</div>
-                  <a href={current.proof_url} target="_blank" rel="noreferrer">
-                    <img src={current.proof_url} alt="Bukti bayar" style={{ width: "100%", maxHeight: 160, objectFit: "cover", borderRadius: 10, border: "1.5px solid #fcd34d", cursor: "pointer" }} />
+
+                  <a href={getMediaURL(current.proof_url)} target="_blank" rel="noreferrer">
+                    <img src={getMediaURL(current.proof_url)} alt="Bukti bayar" style={{ width: "100%", maxHeight: 160, objectFit: "cover", borderRadius: 10, border: "1.5px solid #fcd34d", cursor: "pointer" }} />
                   </a>
                   <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4, textAlign: "center" }}>Klik gambar untuk buka penuh</div>
                 </div>

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import api from "../../lib/api";
+import api, { getMediaURL } from "../../lib/api";
 
 const fmtRp = (n) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
@@ -86,12 +86,13 @@ export default function PaymentDetailModal({ item, onClose, onApprove, onReject,
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 8 }}>📎 Bukti Transfer</div>
             {item.proof_url ? (
-              <a href={item.proof_url} target="_blank" rel="noreferrer" style={{ display: "block", textDecoration: "none" }}>
+              <a href={getMediaURL(item.proof_url)} target="_blank" rel="noreferrer" style={{ display: "block", textDecoration: "none" }}>
                 <div style={{ border: "2px dashed #a78bfa", borderRadius: 12, padding: "12px", textAlign: "center", background: "#faf5ff", cursor: "pointer" }}>
                   {/\.(jpg|jpeg|png|gif|webp)$/i.test(item.proof_url) ? (
-                    <img src={item.proof_url} alt="Bukti" style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 8, objectFit: "contain" }} />
+                    <img src={getMediaURL(item.proof_url)} alt="Bukti" style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 8, objectFit: "contain" }} />
                   ) : (
                     <div style={{ fontSize: 13, color: "#7c3aed", fontWeight: 700 }}>📄 Lihat Bukti (klik untuk buka)</div>
+
                   )}
                   <div style={{ fontSize: 11, color: "#8b5cf6", marginTop: 6, fontWeight: 600 }}>Klik untuk buka di tab baru ↗</div>
                 </div>

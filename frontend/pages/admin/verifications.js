@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
-import api from "../../lib/api";
+import api, { getMediaURL } from "../../lib/api";
 
 export default function AdminVerifications() {
   const [members, setMembers] = useState([]);
@@ -78,15 +78,15 @@ export default function AdminVerifications() {
 
               <div style={{ marginBottom: 20 }}>
                 <label className="label">📸 Foto Selfie</label>
-                <a href={selected.selfie_url} target="_blank" rel="noreferrer">
-                  <img src={selected.selfie_url} style={{ width: "100%", borderRadius: 12, border: "1.5px solid var(--bd)", marginTop: 8 }} alt="Selfie" />
+                <a href={getMediaURL(selected.selfie_url)} target="_blank" rel="noreferrer">
+                  <img src={getMediaURL(selected.selfie_url)} style={{ width: "100%", borderRadius: 12, border: "1.5px solid var(--bd)", marginTop: 8 }} alt="Selfie" />
                 </a>
               </div>
 
               <div style={{ marginBottom: 20 }}>
                 <label className="label">🪪 Foto KTP</label>
-                <a href={selected.ktp_url} target="_blank" rel="noreferrer">
-                  <img src={selected.ktp_url} style={{ width: "100%", borderRadius: 12, border: "1.5px solid var(--bd)", marginTop: 8 }} alt="KTP" />
+                <a href={getMediaURL(selected.ktp_url)} target="_blank" rel="noreferrer">
+                  <img src={getMediaURL(selected.ktp_url)} style={{ width: "100%", borderRadius: 12, border: "1.5px solid var(--bd)", marginTop: 8 }} alt="KTP" />
                 </a>
               </div>
 

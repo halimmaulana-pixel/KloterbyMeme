@@ -32,9 +32,11 @@ async def member_self_register(
     db=Depends(get_db)
 ):
     # Normalize WA
-    wa_raw = wa.strip()
+    wa_raw = wa.strip().lstrip("+")
     if wa_raw.startswith("0"):
         wa_raw = "62" + wa_raw[1:]
+    elif not wa_raw.startswith("62"):
+        wa_raw = "62" + wa_raw
     
     # Get default tenant
     tenant = TenantRepository(db).get_first()
@@ -93,9 +95,9 @@ def admin_list_pending(
             "name": m.name,
             "wa": m.wa,
             "nik": m.nik,
-            "selfie_url": f"http://127.0.0.1:8002{m.selfie_url}" if m.selfie_url else None,
-            "ktp_url": f"http://127.0.0.1:8002{m.ktp_url}" if m.ktp_url else None,
-            "created_at": m.created_at.isoformat()
+            "selfie_url": m.selfie_url,
+            "ktp_url": m.ktp_url,
+            "created_at": m.created_at.isoformat() if m.created_at else None
         } for m in members
     ]
 
@@ -374,7 +376,7 @@ def member_pending_payments(
             "status": exp.status,
             "deadline_hour": kloter.payment_deadline_hour,
             "due_datetime": exp.due_datetime.isoformat() if exp.due_datetime else None,
-            "proof_url": f"http://127.0.0.1:8002{proof_url}" if proof_url else None,
+            "proof_url": proof_url,
             "submitted_at": proof_attempt.created_at.strftime("%d %b %Y, %H:%M") if proof_attempt else None,
         })
     return {"payments": results}
