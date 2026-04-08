@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { getToken, getRole } from "../../lib/auth";
 import MemberSidebar from "./MemberSidebar";
 import MemberTopbar from "./MemberTopbar";
-import "../../styles/member.css";
 
 export default function MemberLayout({ children, title, subtitle }) {
   const router = useRouter();
