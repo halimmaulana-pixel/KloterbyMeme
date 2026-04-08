@@ -386,7 +386,7 @@ export default function LoginPage() {
             )}
 
             <div className="rp-footer">
-              Belum terdaftar? <a href="#">Hubungi Admin</a> &nbsp;·&nbsp; <a href="#">Syarat &amp; Ketentuan</a>
+              Belum terdaftar? <Link href="/register" style={{ color: "var(--vio)", fontWeight: 700 }}>Daftar di sini</Link> &nbsp;·&nbsp; <a href="#">Syarat &amp; Ketentuan</a>
             </div>
           </div>
 

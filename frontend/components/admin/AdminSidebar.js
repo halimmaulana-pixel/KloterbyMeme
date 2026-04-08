@@ -30,8 +30,12 @@ export default function AdminSidebar() {
           <span className="sid-emoji">💰</span> Semua Kloter
         </Link>
         <Link href="/admin/payments" className={`sid-item${isActive("/admin/payments") ? " active" : ""}`}>
-          <span className="sid-emoji">✅</span> Verifikasi
+          <span className="sid-emoji">✅</span> Verifikasi Iuran
           <span className="sid-badge red">!</span>
+        </Link>
+        <Link href="/admin/verifications" className={`sid-item${isActive("/admin/verifications") ? " active" : ""}`}>
+          <span className="sid-emoji">👤</span> Verifikasi Member
+          <span className="sid-badge">New</span>
         </Link>
         <Link href="/admin/disbursements" className={`sid-item${isActive("/admin/disbursements") ? " active" : ""}`}>
           <span className="sid-emoji">🎉</span> Disbursement
