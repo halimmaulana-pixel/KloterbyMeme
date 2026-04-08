@@ -1,8 +1,14 @@
 from sqlalchemy import select
-
-from app.models.bank import BankTransaction
-
+from app.models.bank import BankTransaction, BankAccount
 from app.repositories.base_repo import BaseRepository
+
+
+class BankAccountRepository(BaseRepository):
+    model = BankAccount
+
+    def get_multi_by_tenant(self, tenant_id):
+        stmt = select(BankAccount).where(BankAccount.tenant_id == tenant_id)
+        return list(self.db.execute(stmt).scalars().all())
 
 
 class BankRepository(BaseRepository):
