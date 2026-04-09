@@ -22,13 +22,13 @@ def login(payload: LoginRequest, db=Depends(get_db)):
     if admin:
         if verify_password(payload.password, admin.password_hash):
             token = create_access_token(
-                subject=admin.email,
-                role="admin",
+                subject=str(admin.id),
+                role=admin.role,
                 tenant_id=str(admin.tenant_id),
             )
             return TokenResponse(
                 access_token=token,
-                role="admin",
+                role=admin.role,
                 tenant_id=str(admin.tenant_id),
             )
 

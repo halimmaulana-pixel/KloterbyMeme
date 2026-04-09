@@ -18,7 +18,7 @@ def _to_uuid(value: str) -> uuid.UUID:
 class CurrentAdmin:
     id: uuid.UUID
     tenant_id: uuid.UUID
-    role: str = "admin"
+    role: str
 
 
 @dataclass
@@ -53,7 +53,9 @@ def get_current_admin(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=str(exc),
             ) from exc
-        if payload.get("role") != "admin":
+        
+        # Must be either admin or owner
+        if payload.get("role") not in ["admin", "owner"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin access required",
@@ -66,7 +68,7 @@ def get_current_admin(
 
     if not x_tenant_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing tenant")
-    return CurrentAdmin(id=_to_uuid(x_admin_id), tenant_id=_to_uuid(x_tenant_id))
+    return CurrentAdmin(id=_to_uuid(x_admin_id), tenant_id=_to_uuid(x_tenant_id), role="owner")
 
 
 def get_current_member(
