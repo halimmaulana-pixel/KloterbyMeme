@@ -27,7 +27,7 @@ export default function LoginPage() {
 
       setSession(res.data.access_token, res.data.role, res.data.tenant_id);
       
-      if (res.data.role === "admin") {
+      if (res.data.role === "admin" || res.data.role === "owner") {
         router.push("/admin/dashboard");
       } else {
         router.push("/member/home");
