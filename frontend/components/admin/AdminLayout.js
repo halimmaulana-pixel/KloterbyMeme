@@ -11,7 +11,7 @@ export default function AdminLayout({ title, subtitle, children }) {
   useEffect(() => {
     const token = getToken();
     const role = getRole();
-    if (!token || role !== "admin") {
+    if (!token || (role !== "admin" && role !== "owner")) {
       router.push("/login");
     } else {
       setIsLoggedIn(true);
