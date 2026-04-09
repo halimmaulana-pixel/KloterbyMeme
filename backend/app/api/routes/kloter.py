@@ -190,19 +190,25 @@ def init_kloter_periods(
         db.flush()
 
         # Update GET recipient if a member already occupies this slot
-        membership = next((m for m in kloter.memberships if m.slot_number == i), None)
-        if membership:
-            period.get_membership_id = membership.id
+        membership_for_slot = next((m for m in kloter.memberships if m.slot_number == i), None)
+        if membership_for_slot:
+            period.get_membership_id = membership_for_slot.id
 
         # Generate payment expectations for all members for this period
         for ms in kloter.memberships:
             code = generate_unique_code(ms.slot_number, period.period_number)
+            
+            # Rule: Slot 1 (Admin) pays 0 and is auto-verified
+            expected_amount = kloter.contribution if ms.slot_number > 1 else 0
+            status_exp = "expected" if ms.slot_number > 1 else "verified"
+            
             exp = PaymentExpectation(
                 membership_id=ms.id,
                 period_id=period.id,
-                expected_amount=kloter.contribution,
+                expected_amount=expected_amount,
                 unique_code=code,
                 due_datetime=combine_due_datetime(period.due_date, kloter.payment_deadline_hour),
+                status=status_exp
             )
             db.add(exp)
             pp.expected_count += 1
@@ -279,12 +285,18 @@ def add_member_to_kloter(
             ).scalar_one_or_none()
             if not existing_exp:
                 code = generate_unique_code(slot_number, period.period_number)
+                
+                # Rule: Slot 1 (Admin) pays 0 and is auto-verified
+                expected_amount = kloter.contribution if slot_number > 1 else 0
+                status_exp = "expected" if slot_number > 1 else "verified"
+                
                 exp = PaymentExpectation(
                     membership_id=membership.id,
                     period_id=period.id,
-                    expected_amount=kloter.contribution,
+                    expected_amount=expected_amount,
                     unique_code=code,
                     due_datetime=combine_due_datetime(period.due_date, kloter.payment_deadline_hour),
+                    status=status_exp
                 )
                 db.add(exp)
                 # Update period progress expected_count

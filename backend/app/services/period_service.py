@@ -63,7 +63,11 @@ class PeriodService:
         db.flush()
 
     def check_period_completion(self, db, period):
-        progress = period.progress
+        from app.models.period import PeriodProgress
+        progress = db.query(PeriodProgress).filter_by(period_id=period.id).with_for_update().first()
+        if not progress:
+            return period
+            
         ok, _ = can_release_get(progress)
         if ok and period.status != PeriodStatus.READY_GET.value:
             period.status = PeriodStatus.READY_GET.value

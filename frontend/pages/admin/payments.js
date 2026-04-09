@@ -9,13 +9,59 @@ const fmtRp = (n) =>
 
 const avatarTone = { proof_uploaded: "orange", manual_review: "purple", late: "red", verified: "green" };
 
+const VerificationCard = ({ item, isSelected, onToggle, onClick, onApprove, onReject, isBusyGlobal }) => {
+  const [localBusy, setLocalBusy] = useState(false);
+  const tone = avatarTone[item.status] || "purple";
+  const busy = localBusy || isBusyGlobal;
+
+  const handleAction = async (e, action) => {
+    e.stopPropagation();
+    setLocalBusy(true);
+    try {
+      await (action === "approve" ? onApprove(item.id) : onReject(item.id));
+    } catch (err) {
+      alert(`Gagal memproses: ${err.message || "Terjadi kesalahan"}`);
+    } finally {
+      setLocalBusy(false);
+    }
+  };
+
+  return (
+    <div className={`verif-card${isSelected ? " approved" : ""}`} onClick={() => onClick(item)} style={{ cursor: "pointer", opacity: busy ? 0.7 : 1 }}>
+      <input 
+        type="checkbox" 
+        checked={isSelected} 
+        onChange={(e) => { e.stopPropagation(); onToggle(item.id); }} 
+        style={{ width: 16, height: 16, accentColor: "var(--p)", flexShrink: 0 }} 
+      />
+      <div className={`vc-avatar ${tone}`}>{item.member_name.slice(0, 2).toUpperCase()}</div>
+      <div className="vc-info">
+        <div className="vc-name">{item.member_name}</div>
+        <div className="vc-meta">{item.kloter_name} · Periode {item.period_number} · Kode {item.unique_code}</div>
+        <div className="vc-time">Jatuh tempo: {new Date(item.due_datetime).toLocaleString("id-ID")}</div>
+      </div>
+      <div className="vc-amt">{fmtRp(item.expected_amount)}</div>
+      <div title={item.proof_url ? "Ada bukti" : "Belum ada bukti"} style={{ fontSize: 18, opacity: item.proof_url ? 1 : 0.3 }}>
+        {item.proof_url ? "🖼️" : "🧾"}
+      </div>
+      <div className="vc-actions" onClick={(e) => e.stopPropagation()}>
+        <button className="btn green" disabled={busy} onClick={(e) => handleAction(e, "approve")} style={{ padding: "6px 12px", fontSize: 11 }}>
+          {busy ? "…" : "✓ Approve"}
+        </button>
+        <button className="btn red" disabled={busy} onClick={(e) => handleAction(e, "reject")} style={{ padding: "6px 12px", fontSize: 11 }}>
+          ✕ Reject
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminPayments() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState([]);
   const [search, setSearch] = useState("");
-  const [busy, setBusy] = useState([]);
   const [modalItem, setModalItem] = useState(null);
   const [modalBusy, setModalBusy] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -31,7 +77,7 @@ export default function AdminPayments() {
       }).catch(() => {}).finally(() => { if (alive) setLoading(false); });
     };
     load();
-    const interval = setInterval(load, 15000); // auto-refresh setiap 15 detik
+    const interval = setInterval(load, 15000);
     return () => { alive = false; clearInterval(interval); };
   }, []);
 
@@ -46,33 +92,29 @@ export default function AdminPayments() {
     if (Array.isArray(r?.data)) setItems(r.data);
   };
 
-  const runAction = async (id, action) => {
-    setBusy((p) => [...p, id]);
-    try {
-      if (action === "approve") await api.post(`/payments/${id}/verify`);
-      else await api.post(`/payments/${id}/reject`, { note: "Rejected from admin portal" });
-      await refresh();
-      setSelected((p) => p.filter((x) => x !== id));
-      setModalItem(null);
-    } catch (_) {}
-    setBusy((p) => p.filter((x) => x !== id));
+  const handleApprove = async (id) => {
+    await api.post(`/payments/${id}/verify`);
+    await refresh();
+    setSelected((p) => p.filter((x) => x !== id));
+    setModalItem(null);
   };
 
-  const handleModalApprove = async (id) => {
-    setModalBusy(true);
-    await runAction(id, "approve");
-    setModalBusy(false);
-  };
-
-  const handleModalReject = async (id) => {
-    setModalBusy(true);
-    await runAction(id, "reject");
-    setModalBusy(false);
+  const handleReject = async (id) => {
+    await api.post(`/payments/${id}/reject`, { note: "Rejected from admin portal" });
+    await refresh();
+    setSelected((p) => p.filter((x) => x !== id));
+    setModalItem(null);
   };
 
   const bulkVerify = async () => {
     if (!selected.length) return;
-    try { await api.post("/payments/bulk-verify", { ids: selected }); await refresh(); setSelected([]); } catch (_) {}
+    try { 
+      await api.post("/payments/bulk-verify", { ids: selected }); 
+      await refresh(); 
+      setSelected([]); 
+    } catch (err) {
+      alert("Gagal bulk verify: " + err.message);
+    }
   };
 
   const toggleAll = (e) => setSelected(e.target.checked ? filtered.map((x) => x.id) : []);
@@ -97,12 +139,10 @@ export default function AdminPayments() {
       <div className="page-title">✅ Verifikasi Pembayaran</div>
       <div className="page-sub">Approve atau tolak bukti transfer anggota — 1 klik beres!</div>
 
-      {/* Stats */}
       <div className="stat-grid">
         {stats.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
-      {/* Toolbar */}
       <div className="filter-chips">
         {filterChips.map((c) => (
           <div key={c.id} className={`fc-chip${filter === c.id ? " active" : ""}`} onClick={() => setFilter(c.id)}>
@@ -111,7 +151,6 @@ export default function AdminPayments() {
         ))}
       </div>
 
-      {/* Last updated */}
       <div style={{ fontSize: 11, color: "var(--t3)", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
         <span>🔄 Auto-refresh setiap 15 detik</span>
         {lastUpdated && <span>· Terakhir: {lastUpdated.toLocaleTimeString("id-ID")}</span>}
@@ -120,7 +159,6 @@ export default function AdminPayments() {
         </button>
       </div>
 
-      {/* Select bar + search + bulk */}
       <div className="select-bar">
         <input type="checkbox" id="sel-all" onChange={toggleAll} checked={selected.length === filtered.length && filtered.length > 0} />
         <label htmlFor="sel-all">Pilih semua</label>
@@ -136,37 +174,19 @@ export default function AdminPayments() {
         )}
       </div>
 
-      {/* Verification list */}
       <div className="verif-list">
         {loading && <div style={{ padding: 20, color: "var(--t3)", fontSize: 13 }}>Memuat antrian…</div>}
-        {filtered.map((item) => {
-          const tone = avatarTone[item.status] || "purple";
-          const isBusy = busy.includes(item.id);
-          const isSelected = selected.includes(item.id);
-          return (
-            <div key={item.id} className={`verif-card${isSelected ? " approved" : ""}`} onClick={() => setModalItem(item)} style={{ cursor: "pointer" }}>
-              <input type="checkbox" checked={isSelected} onChange={(e) => { e.stopPropagation(); toggle(item.id); }} style={{ width: 16, height: 16, accentColor: "var(--p)", flexShrink: 0 }} />
-              <div className={`vc-avatar ${tone}`}>{item.member_name.slice(0, 2).toUpperCase()}</div>
-              <div className="vc-info">
-                <div className="vc-name">{item.member_name}</div>
-                <div className="vc-meta">{item.kloter_name} · Periode {item.period_number} · Kode {item.unique_code}</div>
-                <div className="vc-time">Jatuh tempo: {new Date(item.due_datetime).toLocaleString("id-ID")}</div>
-              </div>
-              <div className="vc-amt">{fmtRp(item.expected_amount)}</div>
-              <div title={item.proof_url ? "Ada bukti" : "Belum ada bukti"} style={{ fontSize: 18, opacity: item.proof_url ? 1 : 0.3 }}>
-                {item.proof_url ? "🖼️" : "🧾"}
-              </div>
-              <div className="vc-actions" onClick={(e) => e.stopPropagation()}>
-                <button className="btn green" disabled={isBusy} onClick={() => runAction(item.id, "approve")} style={{ padding: "6px 12px", fontSize: 11 }}>
-                  {isBusy ? "…" : "✓ Approve"}
-                </button>
-                <button className="btn red" disabled={isBusy} onClick={() => runAction(item.id, "reject")} style={{ padding: "6px 12px", fontSize: 11 }}>
-                  ✕ Reject
-                </button>
-              </div>
-            </div>
-          );
-        })}
+        {filtered.map((item) => (
+          <VerificationCard
+            key={item.id}
+            item={item}
+            isSelected={selected.includes(item.id)}
+            onToggle={toggle}
+            onClick={setModalItem}
+            onApprove={handleApprove}
+            onReject={handleReject}
+          />
+        ))}
         {!loading && filtered.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t3)", fontSize: 13 }}>
             🎉 Tidak ada item yang perlu diverifikasi
@@ -176,8 +196,8 @@ export default function AdminPayments() {
       <PaymentDetailModal
         item={modalItem}
         onClose={() => setModalItem(null)}
-        onApprove={handleModalApprove}
-        onReject={handleModalReject}
+        onApprove={async (id) => { setModalBusy(true); await handleApprove(id); setModalBusy(false); }}
+        onReject={async (id) => { setModalBusy(true); await handleReject(id); setModalBusy(false); }}
         busy={modalBusy}
       />
     </AdminLayout>

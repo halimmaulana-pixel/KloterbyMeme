@@ -590,12 +590,18 @@ def member_join_kloter(
             period.get_membership_id = membership.id
         if period.status in ("collecting", "verifying", "upcoming", "ready_get"):
             code = generate_unique_code(next_slot, period.period_number)
+            
+            # Rule: Slot 1 (Admin) pays 0 and is auto-verified
+            expected_amount = kloter.contribution if next_slot > 1 else 0
+            status_exp = "expected" if next_slot > 1 else "verified"
+            
             exp = PaymentExpectation(
                 membership_id=membership.id,
                 period_id=period.id,
-                expected_amount=kloter.contribution,
+                expected_amount=expected_amount,
                 unique_code=code,
                 due_datetime=combine_due_datetime(period.due_date, kloter.payment_deadline_hour),
+                status=status_exp
             )
             db.add(exp)
             if period.progress:

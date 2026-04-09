@@ -15,14 +15,14 @@ class Settings(BaseSettings):
     app_debug: bool = True
     api_v1_prefix: str = "/api"
 
-    database_url: str = "sqlite:///./kloterby.db"
+    # Default to data/ directory for persistence in Railway Volumes
+    database_url: str = "sqlite:///./data/kloterby.db"
 
     @property
     def sqlalchemy_database_url(self) -> str:
         url = self.database_url
         if not url or url.strip() == "":
-            # Fallback to sqlite if empty to prevent crash during build/dry-run
-            return "sqlite:///./kloterby.db"
+            return "sqlite:///./data/kloterby.db"
         
         if url.startswith("postgres://"):
             return url.replace("postgres://", "postgresql+psycopg://", 1)

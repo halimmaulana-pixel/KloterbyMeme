@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from sqlalchemy import func
 
 from app.core.enums import PaymentStatus
 from app.core.events import event_bus
@@ -6,6 +7,7 @@ from app.core.exceptions import AlreadyVerified, InvalidStateTransition
 from app.core.state_rules import PAYMENT_TERMINAL_STATES, PAYMENT_VERIFIABLE_STATES
 from app.models.ledger import LedgerEntry
 from app.models.payment import PaymentAttempt
+from app.models.period import PeriodProgress
 from app.services.audit_service import AuditService
 from app.services.period_service import PeriodService
 
@@ -17,6 +19,9 @@ class PaymentService:
         if expectation.status not in PAYMENT_VERIFIABLE_STATES:
             raise InvalidStateTransition(expectation.status, PaymentStatus.VERIFIED.value)
 
+        # Lock progress row to prevent race conditions on counters
+        progress = db.query(PeriodProgress).filter_by(period_id=expectation.period_id).with_for_update().first()
+        
         # Get late penalty if any
         penalty_total = db.query(func.sum(PaymentAttempt.penalty_amount)).filter(
             PaymentAttempt.expectation_id == expectation.id
@@ -32,7 +37,6 @@ class PaymentService:
         )
         db.add(attempt)
 
-        progress = expectation.period.progress
         if expectation.status == PaymentStatus.LATE.value and progress.late_count > 0:
             progress.late_count -= 1
 
